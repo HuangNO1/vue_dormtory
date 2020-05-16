@@ -240,7 +240,7 @@ export default {
         });*/
       // 登入狀態存 cookie 7 天 存 username 或是 email
       Cookies.set("userStatus", this.name, { expires: 7 });
-      document.location.href = "/home";
+      document.location.href = "/admin";
     },
     onFail() {
       this.msg = "";
@@ -249,7 +249,7 @@ export default {
       this.msg = "";
     },
     guest() {
-      document.location.href = "/home";
+      document.location.href = "/admin";
     },
   },
 };

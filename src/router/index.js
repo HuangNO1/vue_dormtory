@@ -26,10 +26,30 @@ const routes = [
         redirect: '/sign/login'
     },
     {
-        path: '/home',
-        name: 'Home',
+        path: '/admin',
+        name: 'Admin',
         component: () =>
-            import ('../views/Home.vue')
+            import ('../views/Admin.vue'),
+        children: [{
+                path: '/admin/dashboard',
+                name: 'Dashboard',
+                component: () =>
+                    import ('../views/Dashboard.vue'),
+            },
+            {
+                path: '/admin/notify',
+                name: 'Notify',
+                component: () =>
+                    import ('../views/Notify.vue'),
+            },
+            {
+                path: '/admin/user',
+                name: 'User',
+                component: () =>
+                    import ('../views/User.vue'),
+            }
+        ],
+        redirect: '/admin/dashboard'
     },
 ]
 
