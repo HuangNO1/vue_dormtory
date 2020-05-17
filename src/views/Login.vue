@@ -105,6 +105,7 @@ import { validationMixin } from "vuelidate";
 import { required, minLength, email } from "vuelidate/lib/validators";
 import axios from "axios";
 import Cookies from "js-cookie"; // 引入 cookie API
+import Vue from "vue";
 
 export default {
   mixins: [validationMixin],
@@ -148,7 +149,7 @@ export default {
     searchUserURL: "https://monitor0305.herokuapp.com/account/search",
     loginSuccess: false,
     openDialog: false,
-    id: null,
+    id: 0,
   }),
 
   computed: {
@@ -163,7 +164,7 @@ export default {
     nameErrors() {
       const errors = [];
       if (!this.$v.name.$dirty) return errors;
-      !this.$v.name.required && errors.push("Username / E-mail is required.");
+      !this.$v.name.required && errors.push("Username is required.");
       this.nameError = true;
       // this.openDialog = true;
       return errors;
@@ -281,23 +282,26 @@ export default {
     onSuccess() {
       console.log("Success verity");
       this.dialog = false;
-      let dataSearch = new FormData();
-      dataSearch.append("username", this.name);
+
+      let data = new FormData();
+      data.append("username", this.name);
       axios
-        .get(this.searchUserURL, dataSearch, {
+        .post(this.searchUserURL, data, {
           headers: { "Content-Type": "multipart/form-data" },
           transformRequest: [(data, headers) => data], //預設值，不做任何轉換
         })
         .then((response) => {
           console.log(response);
-          this.id = response.msg.id;
+          console.log(response.data);
+          this.id = response.data.msg.id;
+          //Vue.$localStorage.set('userID', this.id)
+          // 登入狀態存 cookie 7 天 存 username 或是 email
+          Cookies.set("userId", this.id, { expires: 7 });
+          Cookies.set("username", this.name, { expires: 7 });
         })
         .catch((error) => {
           console.log(error);
         });
-      console.log("id" + this.id);
-      // 登入狀態存 cookie 7 天 存 username 或是 email
-      Cookies.set("userId", this.id, { expires: 7 });
       document.location.href = "/admin";
     },
     onFail() {

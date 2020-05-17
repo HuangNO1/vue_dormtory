@@ -138,39 +138,7 @@
                     @blur="$v.newEmail.$touch()"
                     outlined
                   ></v-text-field>
-                  <!-- email 需要驗證 -->
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="captcha"
-                        :counter="4"
-                        :error-messages="captchaErrors"
-                        :success-messages="captchaSuccess"
-                        label="Captcha"
-                        required
-                        outlined
-                        @input="$v.captcha.$touch()"
-                        @blur="$v.captcha.$touch()"
-                      >
-                        <v-icon slot="prepend" color="green"
-                          >mdi-alpha-c-circle</v-icon
-                        >
-                      </v-text-field>
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-btn
-                        block
-                        class="ma-2"
-                        color="primary"
-                        :loading="loading"
-                        @click="loader = 'loading'"
-                        rounded
-                        dark
-                        x-large
-                        >Get Captcha</v-btn
-                      >
-                    </v-col>
-                  </v-row>
+                  
                   <v-btn text color="red" @click="editEmail">cencel</v-btn>
                   <v-btn
                     text
@@ -378,38 +346,11 @@ export default {
       required,
       sameAsPassword: sameAs("newPassword"),
     },
-    captcha: {
-      required,
-      maxLength: maxLength(4),
-      minLength: minLength(4),
-      isUnique(value) {
-        // standalone validator ideally should not assume a field is required
-        if (value === "") return true;
-        // axios : verity the captcha is true.
-        /*
-        var params = new URLSearchParams();
-        params.append("captcha", this.captcha);
-        axios
-          .post(this.verifyCaptchaURL, params)
-          .then(response => {
-            console.log(response);
-            console.log(response.data);
-            if (response.data === false) {
-              return false;
-            } else {
-              return true;
-            }
-          })
-          .catch(error => {
-            console.log(error);
-          });
-        */
-        // simulate async call, fail for all logins with even length
-        return true;
-      },
-    },
+    
   },
   data: () => ({
+
+    id: 0,
     username: "Huang Po-Hsun",
     avatar: "https://avatars0.githubusercontent.com/u/48636976?s=460&v=4",
     email: "fh831.cp9gw@gmail.com",
@@ -430,24 +371,19 @@ export default {
     originPassword: "",
     newPassword: "",
     newRepeatPassword: "",
-    captcha: "",
     // 檢驗是否欄位填寫錯誤
     newUsernameError: true,
     newEmailError: true,
     newPasswordError: true,
     newRepeatPasswordError: true,
-    captchaError: true,
     // 檢查是否重複的請求 URL
     checkSameUsernameURL: "",
     checkSameEmailURL: "",
     // 發出更改請求
-    newUsernameURL: "",
-    newEmailURL: "",
-    newPasswordURL: "",
-
-    // 驗證碼按鈕的 loading 判斷變數
-    loader: null,
-    loading: false,
+    newUsernameURL: "https://monitor0305.herokuapp.com/account/update",
+    newEmailURL: "https://monitor0305.herokuapp.com/account/update",
+    newPasswordURL: "https://monitor0305.herokuapp.com/account/update",
+    searchURL: "https://monitor0305.herokuapp.com/account/search",
     // 是否可見 密碼
     eye: "mdi-eye-off",
     repeatEye: "mdi-eye-off",
@@ -466,7 +402,25 @@ export default {
 
     SMMSuploadUrl: "https://sm.ms/api/upload",
   }),
-  created() {},
+  created() {
+    let data = new FormData();
+    data.append("username", "llluuu");
+    axios
+      .post(this.searchURL, data, {
+        headers: { "Content-Type": "form-data" },
+        transformRequest: [(data, headers) => data], //預設值，不做任何轉換
+      })
+      .then((response) => {
+        console.log(response);
+        console.log(response.data);
+        this.id = response.data.msg.id;
+        this.email = response.data.msg.email;
+        this.username = response.data.msg.username;
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  },
   methods: {
     editName() {
       this.clickEditName = !this.clickEditName;
@@ -643,16 +597,6 @@ export default {
       this.newEmailError = true;
       return errors;
     },
-    captchaErrors() {
-      const errors = [];
-      if (!this.$v.captcha.$dirty) return errors;
-      !this.$v.captcha.minLength && errors.push("must have 4 letters.");
-      !this.$v.captcha.maxLength && errors.push("must have 4 letters.");
-      !this.$v.captcha.required && errors.push("captcha is required.");
-      !this.$v.captcha.isUnique && errors.push("Captcha isn't true.");
-      this.captchaError = true;
-      return errors;
-    },
     newPasswordErrors() {
       const errors = [];
       if (!this.$v.newPassword.$dirty) return errors;
@@ -711,42 +655,8 @@ export default {
         return "Repeat is OK.";
       }
     },
-    captchaSuccess() {
-      if (
-        this.captcha !== "" &&
-        this.$v.captcha.minLength &&
-        this.$v.captcha.maxLength &&
-        this.$v.captcha.isUnique
-      ) {
-        this.captchaError = false;
-        console.log("captchaSuccess");
-        return "Captcha is OK.";
-      }
-    },
   },
   watch: {
-    loader() {
-      const l = this.loader;
-      this[l] = !this[l];
-
-      setTimeout(() => (this[l] = false), 3000);
-
-      this.loader = null;
-      console.log("loding");
-      // request captcha
-      // request captcha
-      /*var params = new URLSearchParams();
-      params.append("email", this.email);
-      axios
-        .post(this.requestCaptchaURL, params)
-        .then(response => {
-          console.log(response);
-          console.log(response.data);
-        })
-        .catch(error => {
-          console.log(error);
-        });*/
-    },
   },
 };
 </script>

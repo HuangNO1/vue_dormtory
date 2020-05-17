@@ -20,6 +20,9 @@ Vue.use(VueVideoPlayer,
 } */
 )
 
+import Storage from 'vue-web-storage';
+Vue.use(Storage);
+
 Vue.config.productionTip = false
 
 new Vue({
