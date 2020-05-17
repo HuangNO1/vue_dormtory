@@ -106,7 +106,7 @@ export default {
         return "該吃早飯了";
       } else if(date.getHours() - 12 <= 2 && date.getHours() - 12 >= -2) {
         return "該吃午飯了";
-      } else if(date.getHours() - 7 <= 2 && date.getHours() - 7 >= -2){
+      } else if(date.getHours() - 19 <= 2 && date.getHours() - 19 >= -2){
         return "該吃晚飯了";
       } else {
         return "努力學習";
