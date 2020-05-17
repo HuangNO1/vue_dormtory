@@ -16,7 +16,6 @@
           <viewer
             :options="options"
             :images="[item.img]"
-            @inited="inited"
             class="viewer mb-2 mt-2"
             ref="viewer"
           >
@@ -40,7 +39,7 @@
     </v-alert>
 
     <v-alert border="top" colored-border type="info" elevation="2">
-      吃午飯了
+      {{alterToDo}}
     </v-alert>
   </div>
 </template>
@@ -91,7 +90,61 @@ export default {
             "https://images.unsplash.com/photo-1543674214-9a5c967100dc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80",
         },
       ],
+      websock: null,
     };
+  },
+  created() {
+    this.initWebSocket();
+  },
+  destroyed() {
+    this.websock.close(); //离开路由之后断开websocket连接
+  },
+  computed: {
+    alterToDo() {
+      let date = new Date();
+      if(date.getHours() - 6 <= 2 && date.getHours() - 6 >= -2) {
+        return "該吃早飯了";
+      } else if(date.getHours() - 12 <= 2 && date.getHours() - 12 >= -2) {
+        return "該吃午飯了";
+      } else if(date.getHours() - 7 <= 2 && date.getHours() - 7 >= -2){
+        return "該吃晚飯了";
+      } else {
+        return "努力學習";
+      }
+    }
+  },
+  methods: {
+    initWebSocket() {
+      //初始化weosocket
+      const wsuri = "ws://34.71.251.0:12345/ws";
+      this.websock = new WebSocket(wsuri);
+      this.websock.onmessage = this.websocketonmessage;
+      this.websock.onopen = this.websocketonopen;
+      this.websock.onerror = this.websocketonerror;
+      this.websock.onclose = this.websocketclose;
+      this.websocketonopen();
+    },
+    websocketonopen() {
+      //连接建立之后执行send方法发送数据
+      let actions = { test: "12345" };
+      this.websocketsend(JSON.stringify(actions));
+    },
+    websocketonerror() {
+      //连接建立失败重连
+      this.initWebSocket();
+    },
+    websocketonmessage(e) {
+      //数据接收
+      const redata = JSON.parse(e.data);
+    },
+    websocketsend(Data) {
+      //数据发送
+      this.websock.send(Data);
+    },
+    websocketclose(e) {
+      //关闭
+      console.log("断开连接", e);
+    },
   },
 };
 </script>
