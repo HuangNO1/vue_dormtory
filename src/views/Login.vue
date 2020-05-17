@@ -7,12 +7,24 @@
         v-model="name"
         :error-messages="nameErrors"
         :success-messages="nameSuccess"
-        label="Username / E-mail"
+        label="Username"
         required
         @input="$v.name.$touch()"
         @blur="$v.name.$touch()"
       >
         <v-icon slot="prepend" color="green">mdi-account</v-icon>
+      </v-text-field>
+      <!-- email -->
+      <v-text-field
+        v-model="email"
+        :error-messages="emailErrors"
+        :success-messages="emailSuccess"
+        label="E-mail"
+        required
+        @input="$v.email.$touch()"
+        @blur="$v.email.$touch()"
+      >
+        <v-icon slot="prepend" color="green">mdi-email</v-icon>
       </v-text-field>
       <!-- password -->
       <v-text-field
@@ -70,6 +82,7 @@
                 <span>Confirm the username and password are correct.</span>
               </div>
             </div>
+            {{ id }}
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -98,6 +111,15 @@ export default {
 
   validations: {
     name: { required },
+    email: {
+      required,
+      email,
+      isUnique(value) {
+        // standalone validator ideally should not assume a field is required
+        if (value === "") return true;
+        return true;
+      },
+    },
     password: { required, minLength: minLength(6) },
     checkbox: {
       checked(val) {
@@ -112,17 +134,21 @@ export default {
   },
   data: () => ({
     name: "",
+    email: "",
     password: "",
     checkbox: true,
     eye: "mdi-eye-off",
     seePwd: "password",
     dialog: false,
     nameError: true,
+    emailError: true,
     passwordError: true,
     // checkboxError: false,
-    loginURL: "http://localhost:8081/account/check",
-    loginSuccess: true,
-    openDialog: true,
+    loginURL: "https://monitor0305.herokuapp.com/account/login",
+    searchUserURL: "https://monitor0305.herokuapp.com/account/search",
+    loginSuccess: false,
+    openDialog: false,
+    id: null,
   }),
 
   computed: {
@@ -142,6 +168,16 @@ export default {
       // this.openDialog = true;
       return errors;
     },
+    emailErrors() {
+      const errors = [];
+      if (!this.$v.email.$dirty) return errors;
+      !this.$v.email.email && errors.push("Must be valid e-mail.");
+      !this.$v.email.required && errors.push("E-mail is required.");
+      !this.$v.email.isUnique &&
+        errors.push("The e-mail is already registered.");
+      this.emailError = true;
+      return errors;
+    },
     passwordErrors() {
       const errors = [];
       if (!this.$v.password.$dirty) return errors;
@@ -156,6 +192,13 @@ export default {
       if (this.name !== "") {
         this.nameError = false;
         console.log("nameSuccess");
+      }
+    },
+    emailSuccess() {
+      if (this.email !== "" && this.$v.email.email && this.$v.email.isUnique) {
+        this.emailError = false;
+        console.log("emailSuccess");
+        return "E-mail is OK.";
       }
     },
     passwordSuccess() {
@@ -178,32 +221,40 @@ export default {
       this.dialog = false;
       this.$v.$touch();
       console.log("this.nameError: " + this.nameError);
+      console.log("this.emailError: " + this.emailError);
       console.log("this.passwordError: " + this.passwordError);
       // console.log("this.checkboxError: " + this.checkboxError);
       console.log("this.checkbox: " + this.checkbox);
       if (
         this.nameError === false &&
+        this.emailError === false &&
         this.passwordError === false &&
         this.checkbox === true
       ) {
         // submit the login request
-        /*
-        var params = new URLSearchParams();
-        params.append("username", this.name);
-        params.append("password", this.password);
+
+        let data = new FormData();
+        data.append("username", this.name);
+        data.append("email", this.email);
+        data.append("password", this.password);
         axios
-          .post(this.loginURL, params)
-          .then(response => {
+          .post(this.loginURL, data, {
+            headers: { "Content-Type": "form-data" },
+            transformRequest: [(data, headers) => data], //預設值，不做任何轉換
+          })
+          .then((response) => {
             console.log(response);
             console.log(response.data);
             this.loginSuccess = response.data;
           })
-          .catch(error => {
+          .catch((error) => {
             console.log(error);
           });
-        */
+
         this.openDialog = false;
-        this.dialog = true;
+        if (this.loginSuccess) {
+          this.dialog = true;
+        }
       } else {
         this.dialog = false;
       }
@@ -211,6 +262,7 @@ export default {
     clear() {
       this.$v.$reset();
       this.name = "";
+      this.email = "";
       this.password = "";
       this.checkbox = true;
       this.nameError = true;
@@ -229,17 +281,23 @@ export default {
     onSuccess() {
       console.log("Success verity");
       this.dialog = false;
-      /*axios
-        .get("http://localhost:8081/account/setCookies", {
-          params: {
-            username: this.name
-          }
+      let dataSearch = new FormData();
+      dataSearch.append("username", this.name);
+      axios
+        .get(this.searchUserURL, dataSearch, {
+          headers: { "Content-Type": "multipart/form-data" },
+          transformRequest: [(data, headers) => data], //預設值，不做任何轉換
         })
-        .then(response => {
+        .then((response) => {
           console.log(response);
-        });*/
+          this.id = response.msg.id;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+      console.log("id" + this.id);
       // 登入狀態存 cookie 7 天 存 username 或是 email
-      Cookies.set("userStatus", this.name, { expires: 7 });
+      Cookies.set("userId", this.id, { expires: 7 });
       document.location.href = "/admin";
     },
     onFail() {

@@ -27,19 +27,6 @@
       >
         <v-icon slot="prepend" color="green">mdi-email</v-icon>
       </v-text-field>
-      <!-- phone number -->
-      <v-text-field
-        v-model="phone"
-        :type="tel"
-        :error-messages="phoneErrors"
-        :success-messages="phoneSuccess"
-        label="Phone"
-        required
-        @input="$v.phone.$touch()"
-        @blur="$v.phone.$touch()"
-      >
-        <v-icon slot="prepend" color="green">mdi-cellphone</v-icon>
-      </v-text-field>
       <!-- password -->
       <v-text-field
         v-model="password"
@@ -70,36 +57,7 @@
           repeatEye
         }}</v-icon>
       </v-text-field>
-      <!-- email verify -->
-      <v-row>
-        <v-col cols="12" md="6">
-          <v-text-field
-            v-model="captcha"
-            :counter="4"
-            :error-messages="captchaErrors"
-            :success-messages="captchaSuccess"
-            label="Captcha"
-            required
-            @input="$v.captcha.$touch()"
-            @blur="$v.captcha.$touch()"
-          >
-            <v-icon slot="prepend" color="green">mdi-alpha-c-circle</v-icon>
-          </v-text-field>
-        </v-col>
-        <v-col cols="12" md="6">
-          <v-btn
-            block
-            class="ma-2"
-            color="primary"
-            :loading="loading"
-            @click="loader = 'loading'"
-            rounded
-            dark
-            x-large
-            >Get Captcha</v-btn
-          >
-        </v-col>
-      </v-row>
+
       <!-- agree -->
       <v-checkbox
         v-model="checkbox"
@@ -117,10 +75,7 @@
           >
         </template>
         <v-card>
-          <v-card-title
-            class="headline primary white--text"
-            primary-title
-          >
+          <v-card-title class="headline primary white--text" primary-title>
             <p>Success</p>
           </v-card-title>
 
@@ -148,7 +103,10 @@
           <v-btn class="mr-4" color="error" @click="comfirmClear">clear</v-btn>
         </template>
         <v-card>
-          <v-card-title class="headline red lighten-1 white--text" primary-title>
+          <v-card-title
+            class="headline red lighten-1 white--text"
+            primary-title
+          >
             <p>Clear</p>
           </v-card-title>
 
@@ -181,10 +139,7 @@
           >
         </template>
         <v-card>
-          <v-card-title
-            class="headline green white--text"
-            primary-title
-          >
+          <v-card-title class="headline green white--text" primary-title>
             <p>Privacy Policy</p>
           </v-card-title>
 
@@ -221,12 +176,9 @@ import {
   minLength,
   email,
   sameAs,
-  withParams
+  withParams,
 } from "vuelidate/lib/validators";
 import axios from "axios";
-
-// chinese phone number
-const isPhone = value => /^((13|14|15|17|18)[0-9]{1}\d{8})$/.test(value);
 
 export default {
   mixins: [validationMixin],
@@ -257,10 +209,10 @@ export default {
             console.log(error);
           });
         */
-        
+
         // simulate async call, fail for all logins with even length
         return true;
-      }
+      },
     },
     email: {
       required,
@@ -289,61 +241,26 @@ export default {
           */
         // simulate async call, fail for all logins with even length
         return true;
-      }
-    },
-    phone: {
-      required,
-      phoneValid: isPhone
+      },
     },
     password: { required, minLength: minLength(6) },
     repeatPassword: {
       required,
-      sameAsPassword: sameAs("password")
+      sameAsPassword: sameAs("password"),
     },
-    captcha: {
-      required,
-      maxLength: maxLength(4),
-      minLength: minLength(4),
-      isUnique(value) {
-        // standalone validator ideally should not assume a field is required
-        if (value === "") return true;
-        // axios : verity the captcha is true.
-        /*
-        var params = new URLSearchParams();
-        params.append("captcha", this.captcha);
-        axios
-          .post(this.verifyCaptchaURL, params)
-          .then(response => {
-            console.log(response);
-            console.log(response.data);
-            if (response.data === false) {
-              return false;
-            } else {
-              return true;
-            }
-          })
-          .catch(error => {
-            console.log(error);
-          });
-        */
-        // simulate async call, fail for all logins with even length
-        return true;
-      }
-    },
+
     checkbox: {
       checked(val) {
         return val;
-      }
-    }
+      },
+    },
   },
 
   data: () => ({
     name: "",
     email: "",
-    phone: "",
     password: "",
     repeatPassword: "",
-    captcha: "",
     checkbox: true,
     eye: "mdi-eye-off",
     repeatEye: "mdi-eye-off",
@@ -351,10 +268,8 @@ export default {
     seeRepeatPwd: "password",
     nameError: true,
     emailError: true,
-    phoneError: true,
     passwordError: true,
     repeatPasswordError: true,
-    captchaError: true,
     registerSuccess: false,
     dialog: false,
     openDialog: true,
@@ -362,11 +277,9 @@ export default {
     clearDialog: false,
     checkSameNameURL: "",
     checkSameEmailURL: "",
-    requestCaptchaURL: "",
-    verifyCaptchaURL: "",
-    registerURL: "",
+    registerURL: "https://monitor0305.herokuapp.com/account/register",
     loader: null,
-    loading: false
+    loading: false,
   }),
 
   computed: {
@@ -397,14 +310,6 @@ export default {
       this.emailError = true;
       return errors;
     },
-    phoneErrors() {
-      const errors = [];
-      if (!this.$v.phone.$dirty) return errors;
-      !this.$v.phone.phoneValid && errors.push("Must be valid phone number.");
-      !this.$v.phone.required && errors.push("Phone number is required.");
-      this.emailError = true;
-      return errors;
-    },
     passwordErrors() {
       const errors = [];
       if (!this.$v.password.$dirty) return errors;
@@ -424,16 +329,7 @@ export default {
       this.repeatPasswordError = true;
       return errors;
     },
-    captchaErrors() {
-      const errors = [];
-      if (!this.$v.captcha.$dirty) return errors;
-      !this.$v.captcha.minLength && errors.push("must have 4 letters.");
-      !this.$v.captcha.maxLength && errors.push("must have 4 letters.");
-      !this.$v.captcha.required && errors.push("captcha is required.");
-      !this.$v.captcha.isUnique && errors.push("Captcha isn't true.");
-      this.captchaError = true;
-      return errors;
-    },
+
     nameSuccess() {
       if (this.name !== "" && this.$v.name.maxLength && this.$v.name.isUnique) {
         this.nameError = false;
@@ -446,13 +342,6 @@ export default {
         this.emailError = false;
         console.log("emailSuccess");
         return "E-mail is OK.";
-      }
-    },
-    phoneSuccess() {
-      if (this.phone !== "" && this.$v.phone.phoneValid) {
-        this.phoneError = false;
-        console.log("phoneSuccess");
-        return "Phone number is OK.";
       }
     },
     passwordSuccess() {
@@ -469,18 +358,6 @@ export default {
         return "Repeat is OK.";
       }
     },
-    captchaSuccess() {
-      if (
-        this.captcha !== "" &&
-        this.$v.captcha.minLength &&
-        this.$v.captcha.maxLength &&
-        this.$v.captcha.isUnique
-      ) {
-        this.captchaError = false;
-        console.log("captchaSuccess");
-        return "Captcha is OK.";
-      }
-    }
   },
 
   methods: {
@@ -490,38 +367,39 @@ export default {
       this.$v.$touch();
       console.log("this.nameError: " + this.nameError);
       console.log("this.emailError: " + this.emailError);
-      console.log("this.phoneError: " + this.phoneError);
       console.log("this.passwordError: " + this.passwordError);
       console.log("this.repeatPasswordError: " + this.repeatPasswordError);
-      console.log("this.captchaError: " + this.captchaError);
       console.log("this.checkbox: " + this.checkbox);
       if (
         this.nameError === false &&
         this.emailError === false &&
-        this.phoneError === false &&
         this.passwordError === false &&
         this.repeatPasswordError === false &&
-        this.captchaError === false &&
         this.checkbox === true
       ) {
         // submit the register requestion
-        /*// submit the register requestion
-        var params = new URLSearchParams()
-        params.append('username', this.name)
-        params.append('password', this.password)
-        params.append('email', this.email)
-        params.append('phone', this.phone)
-        axios.post(this.registerURL,params)
-          .then(response => {
+        // submit the register requestion
+        let data = new FormData();
+        data.append("username", this.name);
+        data.append("password", this.password);
+        data.append("email", this.email);
+        axios
+          .post(this.registerURL, data, {
+            headers: { "Content-Type": "form-data" },
+            transformRequest: [(data, headers) => data], //預設值，不做任何轉換
+          })
+          .then((response) => {
             console.log(response);
             console.log(response.data);
             this.registerSuccess = response.data;
           })
-          .catch(error => {
+          .catch((error) => {
             console.log(error);
-          });*/
+          });
         this.openDialog = false;
-        this.dialog = true;
+        if (this.registerSuccess) {
+          this.dialog = true;
+        }
       }
     },
     comfirmClear() {
@@ -533,7 +411,6 @@ export default {
       this.email = "";
       this.password = "";
       this.repeatPassword = "";
-      this.captcha = "";
       this.checkbox = true;
       this.clearDialog = false;
     },
@@ -558,36 +435,13 @@ export default {
     toLogin() {
       this.dialog = false;
       setTimeout(() => {
-        document.location.href = "/sign#/Login";
+        document.location.href = "/sign/login";
       }, 500);
     },
     readStatement() {
       this.statementDialog = true;
-    }
+    },
   },
-  watch: {
-    loader() {
-      const l = this.loader;
-      this[l] = !this[l];
-
-      setTimeout(() => (this[l] = false), 3000);
-
-      this.loader = null;
-      console.log("loding");
-      // request captcha
-      // request captcha
-      /*var params = new URLSearchParams();
-      params.append("email", this.email);
-      axios
-        .post(this.requestCaptchaURL, params)
-        .then(response => {
-          console.log(response);
-          console.log(response.data);
-        })
-        .catch(error => {
-          console.log(error);
-        });*/
-    }
-  }
+  watch: {},
 };
 </script>
