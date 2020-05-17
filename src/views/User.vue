@@ -138,7 +138,7 @@
                     @blur="$v.newEmail.$touch()"
                     outlined
                   ></v-text-field>
-                  
+
                   <v-btn text color="red" @click="editEmail">cencel</v-btn>
                   <v-btn
                     text
@@ -224,7 +224,7 @@
                   <v-btn
                     text
                     color="green"
-                    :disabled="newPasswordError || newRepeatPasswordError"
+                    :disabled="newPasswordError || newRepeatPasswordError || originPassword!=noDisplayPWD"
                     @click="submitNewPassword"
                     >save</v-btn
                   >
@@ -288,27 +288,7 @@ export default {
       isUnique(value) {
         // standalone validator ideally should not assume a field is required
         if (value === "") return true;
-        // axios : verity the username is registered.
-        /*
-        var params = new URLSearchParams();
-        params.append("username", this.newUserame);
-        axios
-          .post(this.checkSameNameURL, params)
-          .then(response => {
-            console.log(response);
-            console.log(response.data);
-            if (response.data === false) {
-              return false;
-            } else {
-              return true;
-            }
-          })
-          .catch(error => {
-            console.log(error);
-          });
-        */
 
-        // simulate async call, fail for all logins with even length
         return true;
       },
     },
@@ -318,26 +298,7 @@ export default {
       isUnique(value) {
         // standalone validator ideally should not assume a field is required
         if (value === "") return true;
-        // axios : verity the email is registered.
-        /*
-        var params = new URLSearchParams();
-        params.append("email", this.newEmail);
-        axios
-          .post(this.checkSameEmailURL, params)
-          .then(response => {
-            console.log(response);
-            console.log(response.data);
-            if (response.data === false) {
-              return false;
-            } else {
-              return true;
-            }
-          })
-          .catch(error => {
-            console.log(error);
-          });
-          */
-        // simulate async call, fail for all logins with even length
+
         return true;
       },
     },
@@ -346,14 +307,12 @@ export default {
       required,
       sameAsPassword: sameAs("newPassword"),
     },
-    
   },
   data: () => ({
-
     id: 0,
-    username: "Huang Po-Hsun",
+    username: "",
     avatar: "https://avatars0.githubusercontent.com/u/48636976?s=460&v=4",
-    email: "fh831.cp9gw@gmail.com",
+    email: "",
     password: "********",
 
     isActive: false,
@@ -401,10 +360,13 @@ export default {
     changeFailDialog: false,
 
     SMMSuploadUrl: "https://sm.ms/api/upload",
+
+    noDisplayPWD: "",
   }),
   created() {
     let data = new FormData();
-    data.append("username", "llluuu");
+    let getName = Cookies.get("username");
+    data.append("username", getName);
     axios
       .post(this.searchURL, data, {
         headers: { "Content-Type": "form-data" },
@@ -416,6 +378,7 @@ export default {
         this.id = response.data.msg.id;
         this.email = response.data.msg.email;
         this.username = response.data.msg.username;
+        this.noDisplayPWD = response.data.msg.password;
       })
       .catch((error) => {
         console.log(error);
@@ -468,111 +431,106 @@ export default {
       }
     },
 
-    // 發送更改資料 都以傳送 email 作為更改資料搜索使用者的依據
     submitNewUsername() {
       // axios 提交新使用者名稱
-      // var params = new URLSearchParams();
-      // params.append("newUsername", this.newUsername);
-      // params.append("email", this.email);
-      // axios
-      //   .post(this.newUsernameURL, params)
-      //   .then(response => {
-      //     console.log(response);
-      //     console.log(response.data);
-      //     if (response.data === false) {
-      //       this.updateUsernameSuccess = false;
-      //       this.changeFailDialog = true;
-      //     } else {
-      //       // 更新前端使用者名稱 關閉 edit
-      //       this.updateUsernameSuccess = true;
-      //       this.$store.commit(UPDATE_USER_USERNAME, this.newUsername);
-      //       this.editName();
-      //       // 出現提示窗
-      //       this.snackbar = true;
-      //       this.text = "Your username";
-      //       // Cookies 變更
-      //       Cookies.set('userStatus', this.user.name)
-      //     }
-      //   })
-      //   .catch(error => {
-      //     console.log(error);
-      //   });
-      // 假設測試成功
-      this.updateUsernameSuccess = true;
-      this.$store.commit(UPDATE_USER_USERNAME, this.newUsername);
-      this.editName();
-      // 出現提示窗
-      this.snackbar = true;
-      this.text = "Your username";
+      let data = new FormData();
+      data.append("username", this.newUsername);
+      data.append("email", this.email);
+      data.append("password", this.noDisplayPWD);
+      data.append("id", this.id);
+      axios
+        .put(this.newUsernameURL, data, {
+          headers: { "Content-Type": "form-data" },
+          transformRequest: [(data, headers) => data], //預設值，不做任何轉換
+        })
+        .then((response) => {
+          console.log(response);
+          console.log(response.data);
+          if (response.data.data === false) {
+            this.updateUsernameSuccess = false;
+            this.changeFailDialog = true;
+          } else {
+            // 更新前端使用者名稱 關閉 edit
+            this.updateUsernameSuccess = true;
+            //this.$store.commit(UPDATE_USER_USERNAME, this.newUsername);
+            // Cookies 變更
+            Cookies.set("username", this.newUsername, { expires: 7 });
+            this.username = this.newUsername;
+            this.editName();
+            // 出現提示窗
+            this.snackbar = true;
+            this.text = "Your username";
+          }
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
 
     submitNewEmail() {
       // axios 提交新 email
-      // var params = new URLSearchParams();
-      // params.append("newEmail", this.newEmail);
-      // params.append("email", this.email);
-      // axios
-      //   .post(this.newEmailURL, params)
-      //   .then(response => {
-      //     console.log(response);
-      //     console.log(response.data);
-      //     if (response.data === false) {
-      //       this.updateEmailSuccess = false;
-      //       this.changeFailDialog = true;
-      //     } else {
-      //       // 更前端 email 關閉 edit
-      //       this.updateEmailSuccess = true;
-      //       this.$store.commit(UPDATE_USER_EMAIL, this.newEmail);
-      //       this.editEmail();
-      //       // 出現提示窗
-      //       this.snackbar = true;
-      //       this.text = "Your E-mail";
-      //     }
-      //   })
-      //   .catch(error => {
-      //     console.log(error);
-      //   });
-      // 假設測試成功
-      this.updateEmailSuccess = true;
-      this.$store.commit(UPDATE_USER_EMAIL, this.newEmail);
-      this.editEmail();
-      // 出現提示窗
-      this.snackbar = true;
-      this.text = "your E-mail";
+      let data = new FormData();
+      data.append("username", this.username);
+      data.append("email", this.newEmail);
+      data.append("password", this.noDisplayPWD);
+      data.append("id", this.id);
+      axios
+        .post(this.newEmailURL, data, {
+          headers: { "Content-Type": "form-data" },
+          transformRequest: [(data, headers) => data], //預設值，不做任何轉換
+        })
+        .then(response => {
+          console.log(response);
+          console.log(response.data);
+          if (response.data.data === false) {
+            this.updateEmailSuccess = false;
+            this.changeFailDialog = true;
+          } else {
+            // 更前端 email 關閉 edit
+            this.updateEmailSuccess = true;
+            this.email = this.newEmail;
+            this.editEmail();
+            // 出現提示窗
+            this.snackbar = true;
+            this.text = "Your E-mail";
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
     },
 
     submitNewPassword() {
       // axios 提交新密碼
-      // var params = new URLSearchParams();
-      // params.append("oringinPassword", this.originPassword);
-      // params.append("newPassword", this.newPassword);
-      // params.append("email", this.email);
-      // axios
-      //   .post(this.newPasswordURL, params)
-      //   .then(response => {
-      //     console.log(response);
-      //     console.log(response.data);
-      //     if (response.data === false) {
-      //       this.updatePassword = false;
-      //       this.changeFailDialog = true;
-      //     } else {
-      //       // 不會在前端更新密碼形式，前端不顯示密碼以保安全
-      //       this.updatePassword = true;
-      //       this.editPassword();
-      //       // 出現提示窗
-      //       this.snackbar = true;
-      //       this.text = "your password";
-      //     }
-      //   })
-      //   .catch(error => {
-      //     console.log(error);
-      //   });
-      // 假設測試成功
-      this.updatePassword = true;
-      this.editPassword();
-      // 出現提示窗
-      this.snackbar = true;
-      this.text = "Your password";
+      let data = new FormData();
+      data.append("username", this.username);
+      data.append("email", this.email);
+      data.append("password", this.newPassword);
+      data.append("id", this.id);
+      axios
+        .post(this.newPasswordURL, data, {
+          headers: { "Content-Type": "form-data" },
+          transformRequest: [(data, headers) => data], //預設值，不做任何轉換
+        })
+        .then(response => {
+          console.log(response);
+          console.log(response.data);
+          if (response.data.data === false) {
+            this.updatePassword = false;
+            this.changeFailDialog = true;
+          } else {
+            // 不會在前端更新密碼形式，前端不顯示密碼以保安全
+            this.updatePassword = true;
+            this.noDisplayPWD = this.newPassword;
+            this.editPassword();
+            // 出現提示窗
+            this.snackbar = true;
+            this.text = "your password";
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
     },
   },
   computed: {
@@ -656,7 +614,6 @@ export default {
       }
     },
   },
-  watch: {
-  },
+  watch: {},
 };
 </script>

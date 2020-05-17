@@ -82,7 +82,6 @@
                 <span>Confirm the username and password are correct.</span>
               </div>
             </div>
-            {{ id }}
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -246,7 +245,7 @@ export default {
           .then((response) => {
             console.log(response);
             console.log(response.data);
-            this.loginSuccess = response.data;
+            this.loginSuccess = response.data.data;
           })
           .catch((error) => {
             console.log(error);
