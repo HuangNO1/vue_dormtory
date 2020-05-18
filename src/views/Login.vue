@@ -246,15 +246,19 @@ export default {
             console.log(response);
             console.log(response.data);
             this.loginSuccess = response.data.data;
+            this.openDialog = false;
+            if (this.loginSuccess) {
+              this.dialog = true;
+            }
           })
           .catch((error) => {
             console.log(error);
-          });
 
-        this.openDialog = false;
-        if (this.loginSuccess) {
-          this.dialog = true;
-        }
+            this.openDialog = false;
+            if (this.loginSuccess) {
+              this.dialog = true;
+            }
+          });
       } else {
         this.dialog = false;
       }

@@ -6,7 +6,7 @@
     <v-expansion-panels popout focusable>
       <v-expansion-panel v-for="(item, i) in alterInfoData" :key="i">
         <v-expansion-panel-header disable-icon-rotate>
-          {{ item.dateTime }} - A person enter the room.
+          {{ item.time }} - A person enter the room.
           <template v-slot:actions>
             <v-icon color="error">mdi-alert-circle</v-icon>
           </template>
@@ -15,7 +15,7 @@
           <!-- 顯示圖片 -->
           <viewer
             :options="options"
-            :images="[item.img]"
+            :images="[item.url]"
             class="viewer mb-2 mt-2"
             ref="viewer"
           >
@@ -39,7 +39,7 @@
     </v-alert>
 
     <v-alert border="top" colored-border type="info" elevation="2">
-      {{alterToDo}}
+      {{ alterToDo }}
     </v-alert>
   </div>
 </template>
@@ -53,48 +53,23 @@ export default {
   },
   data() {
     return {
-      alterInfoData: [
-        {
-          dateTime: "9:54 PM",
-          img:
-            "https://images.unsplash.com/photo-1543674214-9a5c967100dc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80",
-        },
-        {
-          dateTime: "7:22 PM",
-          img:
-            "https://images.unsplash.com/photo-1543674214-9a5c967100dc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80",
-        },
-        {
-          dateTime: "1:22 AM",
-          img:
-            "https://images.unsplash.com/photo-1543674214-9a5c967100dc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80",
-        },
-        {
-          dateTime: "8:37 AM",
-          img:
-            "https://images.unsplash.com/photo-1543674214-9a5c967100dc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80",
-        },
-        {
-          dateTime: "12:11 PM",
-          img:
-            "https://images.unsplash.com/photo-1543674214-9a5c967100dc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80",
-        },
-        {
-          dateTime: "6:30 AM",
-          img:
-            "https://images.unsplash.com/photo-1543674214-9a5c967100dc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80",
-        },
-        {
-          dateTime: "5:55 PM",
-          img:
-            "https://images.unsplash.com/photo-1543674214-9a5c967100dc?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1267&q=80",
-        },
-      ],
+      alterInfoData: [],
       websock: null,
+      getPictureURL: "https://monitor0305.herokuapp.com/websocket/search",
     };
   },
   created() {
     this.initWebSocket();
+    axios
+      .get(this.getPictureURL)
+      .then((response) => {
+        console.log(response);
+        console.log(response.data);
+        this.alterInfoData = response.data.msg;
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   },
   destroyed() {
     this.websock.close(); //离开路由之后断开websocket连接
@@ -102,16 +77,16 @@ export default {
   computed: {
     alterToDo() {
       let date = new Date();
-      if(date.getHours() - 6 <= 2 && date.getHours() - 6 >= -2) {
+      if (date.getHours() - 6 <= 2 && date.getHours() - 6 >= -2) {
         return "該吃早飯了";
-      } else if(date.getHours() - 12 <= 2 && date.getHours() - 12 >= -2) {
+      } else if (date.getHours() - 12 <= 2 && date.getHours() - 12 >= -2) {
         return "該吃午飯了";
-      } else if(date.getHours() - 19 <= 2 && date.getHours() - 19 >= -2){
+      } else if (date.getHours() - 19 <= 2 && date.getHours() - 19 >= -2) {
         return "該吃晚飯了";
       } else {
         return "努力學習";
       }
-    }
+    },
   },
   methods: {
     initWebSocket() {
@@ -136,6 +111,17 @@ export default {
     websocketonmessage(e) {
       //数据接收
       const redata = JSON.parse(e.data);
+      console.log("Received Message: " + e.data);
+      axios
+        .get(this.getPictureURL)
+        .then((response) => {
+          console.log(response);
+          console.log(response.data);
+          this.alterInfoData = response.data.msg;
+        })
+        .catch((error) => {
+          console.log(error);
+        });
     },
     websocketsend(Data) {
       //数据发送
