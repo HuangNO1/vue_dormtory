@@ -36,9 +36,11 @@ export default {
         sources: [
           {
             withCredentials: false,
-            type: "application/x-mpegURL",
+            // type: "application/x-mpegURL",
+            type: "video/mp4",
+            // mp4
             src:
-              "https://www.youtube.com/watch?v=s1OFwfcRWyk",
+              "http://qagvkhggo.bkt.clouddn.com/video.mp4",
           },
         ],
         controlBar: {

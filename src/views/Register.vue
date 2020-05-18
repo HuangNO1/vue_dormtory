@@ -392,14 +392,18 @@ export default {
             console.log(response);
             console.log(response.data);
             this.registerSuccess = response.data;
+            this.openDialog = false;
+            if (this.registerSuccess) {
+              this.dialog = true;
+            }
           })
           .catch((error) => {
             console.log(error);
+            this.openDialog = false;
+            if (this.registerSuccess) {
+              this.dialog = true;
+            }
           });
-        this.openDialog = false;
-        if (this.registerSuccess) {
-          this.dialog = true;
-        }
       }
     },
     comfirmClear() {
